@@ -80,6 +80,12 @@ enum CitationStyle: String, CaseIterable, Sendable {
 @Observable
 final class AppState {
 
+    // MARK: - Onboarding
+
+    var hasCompletedOnboarding: Bool = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {
+        didSet { UserDefaults.standard.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding") }
+    }
+
     // MARK: - Projects
 
     var projects: [Project] = []
@@ -123,8 +129,12 @@ final class AppState {
 
     // MARK: - Settings
 
-    var authorName: String = ""
-    var authorEmail: String = ""
+    var authorName: String = UserDefaults.standard.string(forKey: "authorName") ?? "" {
+        didSet { UserDefaults.standard.set(authorName, forKey: "authorName") }
+    }
+    var authorEmail: String = UserDefaults.standard.string(forKey: "authorEmail") ?? "" {
+        didSet { UserDefaults.standard.set(authorEmail, forKey: "authorEmail") }
+    }
     var defaultBranch: String = "main"
     var editorFontSize: Double = 14
     var editorTheme: String = "Default"

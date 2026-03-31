@@ -62,6 +62,12 @@ struct SettingsView: View {
                     Text("Nord").tag("Nord")
                 }
             }
+
+            Section("Setup") {
+                Button("Run Setup Again...") {
+                    appState.hasCompletedOnboarding = false
+                }
+            }
         }
         .formStyle(.grouped)
     }

@@ -6,9 +6,15 @@ struct OpenTwigApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(appState)
-                .frame(minWidth: 900, minHeight: 600)
+            if appState.hasCompletedOnboarding {
+                ContentView()
+                    .environment(appState)
+                    .frame(minWidth: 900, minHeight: 600)
+            } else {
+                OnboardingView()
+                    .environment(appState)
+                    .frame(minWidth: 900, minHeight: 600)
+            }
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified(showsTitle: true))
