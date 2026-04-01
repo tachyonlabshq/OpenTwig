@@ -8,37 +8,17 @@ struct ContentView: View {
 
         NavigationSplitView {
             SidebarView()
+                .navigationSplitViewColumnWidth(ideal: 220)
         } content: {
             contentColumn
+                .navigationSplitViewColumnWidth(ideal: 280)
         } detail: {
             detailColumn
         }
         .navigationSplitViewStyle(.balanced)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                Button {
-                    appState.showCommitSheet = true
-                } label: {
-                    Label("Commit", systemImage: "checkmark.circle")
-                }
-                .keyboardShortcut("k", modifiers: [.command])
-                .help("Commit changes")
-
-                Button {
-                    appState.pushChanges()
-                } label: {
-                    Label("Push", systemImage: "arrow.up.circle")
-                }
-                .keyboardShortcut("k", modifiers: [.command, .shift])
-                .help("Push to remote")
-
-                Button {
-                    appState.pullChanges()
-                } label: {
-                    Label("Pull", systemImage: "arrow.down.circle")
-                }
-                .keyboardShortcut("u", modifiers: [.command, .shift])
-                .help("Pull from remote")
+                gitToolbarButtons
             }
         }
         .sheet(isPresented: $appState.showNewProject) {
@@ -58,6 +38,35 @@ struct ContentView: View {
         }
     }
 
+    // MARK: - Git Toolbar Buttons
+
+    @ViewBuilder
+    private var gitToolbarButtons: some View {
+        Button {
+            appState.showCommitSheet = true
+        } label: {
+            Label("Commit", systemImage: "checkmark.circle")
+        }
+        .keyboardShortcut("k", modifiers: [.command])
+        .help("Commit changes")
+
+        Button {
+            appState.pushChanges()
+        } label: {
+            Label("Push", systemImage: "arrow.up.circle")
+        }
+        .keyboardShortcut("k", modifiers: [.command, .shift])
+        .help("Push to remote")
+
+        Button {
+            appState.pullChanges()
+        } label: {
+            Label("Pull", systemImage: "arrow.down.circle")
+        }
+        .keyboardShortcut("u", modifiers: [.command, .shift])
+        .help("Pull from remote")
+    }
+
     // MARK: - Content Column
 
     @ViewBuilder
@@ -72,9 +81,11 @@ struct ContentView: View {
         case .activity:
             ActivityLogView()
         case .settings:
-            Text("Settings are available via the menu.")
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            PlaceholderView(
+                icon: "gear",
+                title: "Settings",
+                subtitle: "Open Settings from the application menu."
+            )
         }
     }
 
@@ -87,7 +98,7 @@ struct ContentView: View {
             if appState.selectedDocument != nil {
                 EditorView()
             } else {
-                placeholderView(
+                PlaceholderView(
                     icon: "doc.text",
                     title: "No Document Selected",
                     subtitle: "Select a document from the list to begin editing."
@@ -97,7 +108,7 @@ struct ContentView: View {
             if let branch = appState.selectedBranch {
                 DiffView(branchName: branch.name)
             } else {
-                placeholderView(
+                PlaceholderView(
                     icon: "arrow.triangle.branch",
                     title: "No Branch Selected",
                     subtitle: "Select a branch to view its changes."
@@ -107,38 +118,51 @@ struct ContentView: View {
             if let citation = appState.selectedCitation {
                 CitationDetailView(citation: citation)
             } else {
-                placeholderView(
+                PlaceholderView(
                     icon: "book.closed",
                     title: "No Citation Selected",
                     subtitle: "Select a citation to view its details."
                 )
             }
         case .activity:
-            placeholderView(
+            PlaceholderView(
                 icon: "clock.arrow.circlepath",
                 title: "Activity",
                 subtitle: "Select an event to view details."
             )
         case .settings:
-            placeholderView(
+            PlaceholderView(
                 icon: "gear",
                 title: "Settings",
                 subtitle: "Open Settings from the application menu."
             )
         }
     }
+}
 
-    private func placeholderView(icon: String, title: String, subtitle: String) -> some View {
+// MARK: - Placeholder View
+
+struct PlaceholderView: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+
+    var body: some View {
         VStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 48))
-                .foregroundStyle(.tertiary)
+                .font(.system(size: 48, weight: .thin))
+                .foregroundStyle(.quaternary)
+
             Text(title)
-                .font(.title2)
+                .font(.title3)
+                .fontWeight(.medium)
                 .foregroundStyle(.secondary)
+
             Text(subtitle)
                 .font(.callout)
                 .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 260)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -151,15 +175,23 @@ private struct CommitSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var commitMessage: String = ""
 
+    private var isMessageEmpty: Bool {
+        commitMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Commit Changes")
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Commit Changes", systemImage: "checkmark.circle")
                 .font(.headline)
 
             TextEditor(text: $commitMessage)
                 .font(.body.monospaced())
                 .frame(minHeight: 100)
-                .border(Color(.separatorColor))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color(.separatorColor), lineWidth: 1)
+                )
 
             HStack {
                 Button("Cancel", role: .cancel) {
@@ -174,11 +206,11 @@ private struct CommitSheet: View {
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)
-                .disabled(commitMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(isMessageEmpty)
             }
         }
-        .padding()
-        .frame(width: 480, height: 240)
+        .padding(20)
+        .frame(width: 480, height: 260)
     }
 }
 

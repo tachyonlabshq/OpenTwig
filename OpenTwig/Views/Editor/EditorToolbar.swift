@@ -5,74 +5,108 @@ struct EditorToolbar: ToolbarContent {
 
     var body: some ToolbarContent {
         ToolbarItemGroup(placement: .automatic) {
-            Group {
-                Button {
-                    wrapSelection(prefix: "**", suffix: "**")
-                } label: {
-                    Text("B").bold()
-                }
-                .help("Bold (Cmd+B)")
-                .keyboardShortcut("b", modifiers: [.command])
+            // Formatting group
+            formatBoldButton
+            formatItalicButton
+            headingMenu
 
-                Button {
-                    wrapSelection(prefix: "*", suffix: "*")
-                } label: {
-                    Text("I").italic()
-                }
-                .help("Italic (Cmd+I)")
-                .keyboardShortcut("i", modifiers: [.command])
+            Divider()
 
-                Menu {
-                    ForEach(1...6, id: \.self) { level in
-                        Button("Heading \(level)") {
-                            insertPrefix(String(repeating: "#", count: level) + " ")
-                        }
-                    }
-                } label: {
-                    Label("Heading", systemImage: "textformat.size")
-                }
-                .help("Insert heading")
+            // Insert group
+            linkButton
+            imageButton
+            citationButton
+            codeBlockButton
 
-                Divider()
+            Divider()
 
-                Button {
-                    wrapSelection(prefix: "[", suffix: "](url)")
-                } label: {
-                    Label("Link", systemImage: "link")
-                }
-                .help("Insert link")
-
-                Button {
-                    insertText("![Alt text](image-url)")
-                } label: {
-                    Label("Image", systemImage: "photo")
-                }
-                .help("Insert image")
-
-                Button {
-                    appState.showAddCitation = true
-                } label: {
-                    Label("Citation", systemImage: "book.closed")
-                }
-                .help("Insert citation")
-
-                Button {
-                    wrapSelection(prefix: "```\n", suffix: "\n```")
-                } label: {
-                    Label("Code Block", systemImage: "chevron.left.forwardslash.chevron.right")
-                }
-                .help("Insert code block")
-
-                Divider()
-
-                Button {
-                    appState.showExportSheet = true
-                } label: {
-                    Label("Export", systemImage: "square.and.arrow.up")
-                }
-                .help("Export document")
-            }
+            // Export
+            exportButton
         }
+    }
+
+    // MARK: - Formatting Buttons
+
+    private var formatBoldButton: some View {
+        Button {
+            wrapSelection(prefix: "**", suffix: "**")
+        } label: {
+            Label("Bold", systemImage: "bold")
+        }
+        .help("Bold")
+        .keyboardShortcut("b", modifiers: [.command])
+    }
+
+    private var formatItalicButton: some View {
+        Button {
+            wrapSelection(prefix: "*", suffix: "*")
+        } label: {
+            Label("Italic", systemImage: "italic")
+        }
+        .help("Italic")
+        .keyboardShortcut("i", modifiers: [.command])
+    }
+
+    private var headingMenu: some View {
+        Menu {
+            ForEach(1...6, id: \.self) { level in
+                Button("Heading \(level)") {
+                    insertPrefix(String(repeating: "#", count: level) + " ")
+                }
+            }
+        } label: {
+            Label("Heading", systemImage: "textformat.size")
+        }
+        .help("Insert heading")
+    }
+
+    // MARK: - Insert Buttons
+
+    private var linkButton: some View {
+        Button {
+            wrapSelection(prefix: "[", suffix: "](url)")
+        } label: {
+            Label("Link", systemImage: "link")
+        }
+        .help("Insert link")
+    }
+
+    private var imageButton: some View {
+        Button {
+            insertText("![Alt text](image-url)")
+        } label: {
+            Label("Image", systemImage: "photo")
+        }
+        .help("Insert image")
+    }
+
+    private var citationButton: some View {
+        Button {
+            appState.showAddCitation = true
+        } label: {
+            Label("Citation", systemImage: "book.closed")
+        }
+        .help("Insert citation")
+    }
+
+    private var codeBlockButton: some View {
+        Button {
+            wrapSelection(prefix: "```\n", suffix: "\n```")
+        } label: {
+            Label("Code Block", systemImage: "chevron.left.forwardslash.chevron.right")
+        }
+        .help("Insert code block")
+    }
+
+    // MARK: - Export
+
+    private var exportButton: some View {
+        Button {
+            appState.showExportSheet = true
+        } label: {
+            Label("Export", systemImage: "square.and.arrow.up")
+        }
+        .help("Export document")
     }
 
     // MARK: - Text Manipulation Helpers

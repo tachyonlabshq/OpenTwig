@@ -32,7 +32,7 @@ struct SettingsView: View {
                     Label("Export", systemImage: "square.and.arrow.up")
                 }
         }
-        .frame(width: 520, height: 380)
+        .frame(width: 520, height: 400)
     }
 
     // MARK: - General
@@ -51,7 +51,8 @@ struct SettingsView: View {
                     .frame(width: 160)
                     Text("\(Int(appState.editorFontSize)) pt")
                         .monospacedDigit()
-                        .frame(width: 40)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 44, alignment: .trailing)
                 }
 
                 Picker("Theme", selection: $appState.editorTheme) {
@@ -64,8 +65,18 @@ struct SettingsView: View {
             }
 
             Section("Setup") {
-                Button("Run Setup Again...") {
-                    appState.hasCompletedOnboarding = false
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Onboarding")
+                            .font(.body)
+                        Text("Re-run the initial setup wizard.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Run Setup Again...") {
+                        appState.hasCompletedOnboarding = false
+                    }
                 }
             }
         }
@@ -85,6 +96,7 @@ struct SettingsView: View {
 
             Section("Defaults") {
                 TextField("Default Branch", text: $appState.defaultBranch)
+                    .help("The default branch name when creating new repositories.")
             }
         }
         .formStyle(.grouped)
@@ -98,12 +110,14 @@ struct SettingsView: View {
         Form {
             Section("Connection") {
                 HStack {
-                    Label(
-                        appState.githubConnected ? "Connected" : "Not Connected",
-                        systemImage: appState.githubConnected
-                            ? "checkmark.circle.fill" : "xmark.circle.fill"
-                    )
-                    .foregroundStyle(appState.githubConnected ? .green : .secondary)
+                    Label {
+                        Text(appState.githubConnected ? "Connected" : "Not Connected")
+                    } icon: {
+                        Image(systemName: appState.githubConnected
+                              ? "checkmark.circle.fill"
+                              : "xmark.circle.fill")
+                        .foregroundStyle(appState.githubConnected ? .green : .secondary)
+                    }
 
                     Spacer()
 
@@ -113,12 +127,12 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Authentication") {
+            Section {
                 SecureField("Personal Access Token", text: $appState.githubToken)
-                    .textFieldStyle(.roundedBorder)
+            } header: {
+                Text("Authentication")
+            } footer: {
                 Text("Tokens are stored securely in Keychain.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
@@ -132,7 +146,6 @@ struct SettingsView: View {
         Form {
             Section("API Configuration") {
                 SecureField("API Key", text: $appState.aiAPIKey)
-                    .textFieldStyle(.roundedBorder)
 
                 Picker("Model", selection: $appState.aiModel) {
                     Text("Claude Sonnet 4").tag("claude-sonnet-4-20250514")
@@ -141,11 +154,12 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Features") {
+            Section {
                 Toggle("Auto-suggest completions", isOn: $appState.aiAutoSuggest)
+            } header: {
+                Text("Features")
+            } footer: {
                 Text("AI suggestions help complete sentences, fix grammar, and suggest citations.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)

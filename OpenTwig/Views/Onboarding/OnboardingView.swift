@@ -36,13 +36,13 @@ struct OnboardingView: View {
                     }
                 }
             }
+            .frame(maxWidth: 360)
             .transition(.asymmetric(
                 insertion: .move(edge: .trailing).combined(with: .opacity),
                 removal: .move(edge: .leading).combined(with: .opacity)
             ))
-            .frame(maxWidth: 360)
         }
-        .animation(.easeInOut(duration: 0.35), value: step)
+        .animation(.easeInOut(duration: 0.4), value: step)
     }
 
     private func advance() {

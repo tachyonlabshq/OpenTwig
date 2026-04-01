@@ -158,14 +158,14 @@ actor GitHubService {
             "X-GitHub-Api-Version": "2022-11-28",
         ]
         self.session = URLSession(configuration: config)
+        self.decoder = JSONDecoder()
+        self.encoder = JSONEncoder()
         guard let parsed = URL(string: baseURL) else {
             // Fall back to the known-good default rather than crashing.
             self.baseURL = URL(string: "https://api.github.com")!
             return
         }
         self.baseURL = parsed
-        self.decoder = JSONDecoder()
-        self.encoder = JSONEncoder()
     }
 
     // MARK: - Configuration

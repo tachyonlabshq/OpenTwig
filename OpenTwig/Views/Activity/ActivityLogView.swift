@@ -44,8 +44,10 @@ struct ActivityLogView: View {
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Menu {
-                    Button("All Events") {
+                    Button {
                         filterType = nil
+                    } label: {
+                        Label("All Events", systemImage: "list.bullet")
                     }
 
                     Divider()
@@ -54,13 +56,18 @@ struct ActivityLogView: View {
                         Button {
                             filterType = type
                         } label: {
-                            Label(type.rawValue, systemImage: iconName(for: type))
+                            Label(
+                                type.displayName,
+                                systemImage: type.iconName
+                            )
                         }
                     }
                 } label: {
                     Label(
-                        filterType?.rawValue ?? "Filter",
-                        systemImage: "line.3.horizontal.decrease.circle"
+                        filterType?.displayName ?? "Filter",
+                        systemImage: filterType == nil
+                            ? "line.3.horizontal.decrease.circle"
+                            : "line.3.horizontal.decrease.circle.fill"
                     )
                 }
                 .help("Filter events by type")
@@ -76,28 +83,6 @@ struct ActivityLogView: View {
             }
         }
     }
-
-    private func iconName(for type: ActivityEventType) -> String {
-        switch type {
-        case .commit: return "checkmark.circle"
-        case .push: return "arrow.up.circle"
-        case .pull: return "arrow.down.circle"
-        case .branchCreated: return "plus.circle"
-        case .branchMerged: return "arrow.triangle.merge"
-        case .prOpened: return "arrow.triangle.pull"
-        case .prMerged: return "arrow.triangle.merge"
-        case .citationAdded: return "book.circle"
-        case .citationRemoved: return "book.closed.circle"
-        case .aiSuggestionCreated: return "sparkles"
-        case .aiSuggestionAccepted: return "checkmark.seal"
-        case .aiSuggestionRejected: return "xmark.seal"
-        case .memberAdded: return "person.badge.plus"
-        case .memberRemoved: return "person.badge.minus"
-        case .documentCreated: return "doc.badge.plus"
-        case .documentDeleted: return "doc.badge.minus"
-        case .exportGenerated: return "square.and.arrow.up"
-        }
-    }
 }
 
 // MARK: - Activity Event Row
@@ -107,9 +92,9 @@ private struct ActivityEventRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: iconName)
+            Image(systemName: event.eventType.iconName)
                 .font(.title3)
-                .foregroundStyle(iconColor)
+                .foregroundStyle(event.eventType.iconColor)
                 .frame(width: 28, height: 28)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -133,9 +118,36 @@ private struct ActivityEventRow: View {
         }
         .padding(.vertical, 4)
     }
+}
 
-    private var iconName: String {
-        switch event.eventType {
+// MARK: - ActivityEventType Helpers
+
+private extension ActivityEventType {
+
+    var displayName: String {
+        switch self {
+        case .commit: return "Commits"
+        case .push: return "Pushes"
+        case .pull: return "Pulls"
+        case .branchCreated: return "Branches Created"
+        case .branchMerged: return "Branches Merged"
+        case .prOpened: return "PRs Opened"
+        case .prMerged: return "PRs Merged"
+        case .citationAdded: return "Citations Added"
+        case .citationRemoved: return "Citations Removed"
+        case .aiSuggestionCreated: return "AI Suggestions"
+        case .aiSuggestionAccepted: return "AI Accepted"
+        case .aiSuggestionRejected: return "AI Rejected"
+        case .memberAdded: return "Members Added"
+        case .memberRemoved: return "Members Removed"
+        case .documentCreated: return "Documents Created"
+        case .documentDeleted: return "Documents Deleted"
+        case .exportGenerated: return "Exports"
+        }
+    }
+
+    var iconName: String {
+        switch self {
         case .commit: return "checkmark.circle"
         case .push: return "arrow.up.circle"
         case .pull: return "arrow.down.circle"
@@ -156,8 +168,8 @@ private struct ActivityEventRow: View {
         }
     }
 
-    private var iconColor: Color {
-        switch event.eventType {
+    var iconColor: Color {
+        switch self {
         case .commit: return .green
         case .push: return .blue
         case .pull: return .orange

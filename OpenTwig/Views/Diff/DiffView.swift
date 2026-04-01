@@ -9,6 +9,11 @@ struct DiffView: View {
     @State private var filePath: String = ""
     @State private var oldBranch: String = "main"
 
+    // MARK: - Diff Colors (GitHub-style for academic prose readability)
+
+    private static let additionBackground = Color(red: 0.902, green: 1.0, blue: 0.925) // #e6ffec
+    private static let deletionBackground = Color(red: 1.0, green: 0.922, blue: 0.914)  // #ffebe9
+
     var body: some View {
         VStack(spacing: 0) {
             diffHeader
@@ -19,9 +24,8 @@ struct DiffView: View {
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Picker("View Mode", selection: $viewMode) {
-                    ForEach(DiffDisplayMode.allCases, id: \.self) { mode in
-                        Text(mode == .unified ? "Unified" : "Side by Side").tag(mode)
-                    }
+                    Text("Unified").tag(DiffDisplayMode.unified)
+                    Text("Side by Side").tag(DiffDisplayMode.sideBySide)
                 }
                 .pickerStyle(.segmented)
             }
@@ -37,7 +41,7 @@ struct DiffView: View {
 
             if !filePath.isEmpty {
                 Text(filePath)
-                    .font(.body.monospaced())
+                    .font(.system(.body, design: .monospaced))
                     .lineLimit(1)
             } else {
                 Text("No file selected")
@@ -49,7 +53,7 @@ struct DiffView: View {
 
             HStack(spacing: 4) {
                 Text(oldBranch)
-                    .font(.caption.monospaced())
+                    .font(.system(.caption, design: .monospaced))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(Color.red.opacity(0.1), in: Capsule())
@@ -59,7 +63,7 @@ struct DiffView: View {
                     .foregroundStyle(.secondary)
 
                 Text(branchName)
-                    .font(.caption.monospaced())
+                    .font(.system(.caption, design: .monospaced))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(Color.green.opacity(0.1), in: Capsule())
@@ -67,7 +71,7 @@ struct DiffView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color(.controlBackgroundColor))
+        .background(Color(nsColor: .controlBackgroundColor))
     }
 
     // MARK: - Diff Content
@@ -75,27 +79,30 @@ struct DiffView: View {
     @ViewBuilder
     private var diffContent: some View {
         if diffs.isEmpty {
-            VStack(spacing: 8) {
-                Image(systemName: "doc.text.magnifyingglass")
-                    .font(.system(size: 36))
-                    .foregroundStyle(.tertiary)
+            ContentUnavailableView {
+                Label("No Changes", systemImage: "doc.text.magnifyingglass")
+            } description: {
                 Text("No changes to display.")
-                    .foregroundStyle(.secondary)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(diffs.enumerated()), id: \.offset) { _, diff in
                         ForEach(diff.hunks.indices, id: \.self) { hunkIndex in
                             let hunk = diff.hunks[hunkIndex]
-                            hunkHeader(hunk: hunk)
+                            hunkHeaderView(hunk: hunk)
                             ForEach(hunk.lines.indices, id: \.self) { lineIndex in
                                 let line = hunk.lines[lineIndex]
                                 DiffLineRow(
                                     line: line,
-                                    lineNumber: hunk.newStart + lineIndex,
-                                    viewMode: viewMode
+                                    oldLineNumber: computeOldLineNumber(
+                                        hunk: hunk,
+                                        lineIndex: lineIndex
+                                    ),
+                                    newLineNumber: computeNewLineNumber(
+                                        hunk: hunk,
+                                        lineIndex: lineIndex
+                                    )
                                 )
                             }
                         }
@@ -105,16 +112,42 @@ struct DiffView: View {
         }
     }
 
-    private func hunkHeader(hunk: DiffHunk) -> some View {
+    private func hunkHeaderView(hunk: DiffHunk) -> some View {
         HStack {
             Text("@@ -\(hunk.oldStart),\(hunk.oldCount) +\(hunk.newStart),\(hunk.newCount) @@")
-                .font(.caption.monospaced())
+                .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.secondary)
             Spacer()
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(Color(.controlBackgroundColor))
+        .background(Color(nsColor: .controlBackgroundColor))
+    }
+
+    // MARK: - Line Number Computation
+
+    private func computeOldLineNumber(hunk: DiffHunk, lineIndex: Int) -> Int? {
+        var counter = hunk.oldStart
+        for i in 0..<lineIndex {
+            let lineType = hunk.lines[i].type
+            if lineType == .context || lineType == .deletion {
+                counter += 1
+            }
+        }
+        let current = hunk.lines[lineIndex].type
+        return current == .addition ? nil : counter
+    }
+
+    private func computeNewLineNumber(hunk: DiffHunk, lineIndex: Int) -> Int? {
+        var counter = hunk.newStart
+        for i in 0..<lineIndex {
+            let lineType = hunk.lines[i].type
+            if lineType == .context || lineType == .addition {
+                counter += 1
+            }
+        }
+        let current = hunk.lines[lineIndex].type
+        return current == .deletion ? nil : counter
     }
 }
 
@@ -122,14 +155,17 @@ struct DiffView: View {
 
 private struct DiffLineRow: View {
     let line: DiffLine
-    let lineNumber: Int
-    let viewMode: DiffDisplayMode
+    let oldLineNumber: Int?
+    let newLineNumber: Int?
 
     private var backgroundColor: Color {
         switch line.type {
-        case .addition: return Color.green.opacity(0.1)
-        case .deletion: return Color.red.opacity(0.1)
-        case .context: return .clear
+        case .addition:
+            return Color(red: 0.902, green: 1.0, blue: 0.925) // #e6ffec
+        case .deletion:
+            return Color(red: 1.0, green: 0.922, blue: 0.914) // #ffebe9
+        case .context:
+            return .clear
         }
     }
 
@@ -143,9 +179,17 @@ private struct DiffLineRow: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Text("\(lineNumber)")
+            // Old line number gutter
+            Text(oldLineNumber.map { "\($0)" } ?? "")
                 .frame(width: 44, alignment: .trailing)
-                .font(.caption.monospaced())
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(.tertiary)
+                .padding(.trailing, 4)
+
+            // New line number gutter
+            Text(newLineNumber.map { "\($0)" } ?? "")
+                .frame(width: 44, alignment: .trailing)
+                .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.tertiary)
                 .padding(.trailing, 8)
 
@@ -155,6 +199,7 @@ private struct DiffLineRow: View {
 
             Text(line.content)
                 .font(.system(.body, design: .monospaced))
+                .textSelection(.enabled)
 
             Spacer()
         }

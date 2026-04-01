@@ -80,7 +80,7 @@ struct CitationListView: View {
             TableColumn("Citekey") { item in
                 Text("@\(item.id)")
                     .font(.body.monospaced())
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
                     .lineLimit(1)
             }
             .width(min: 100, ideal: 140)
@@ -196,7 +196,7 @@ private struct AddCitationSheet: View {
             }
         }
         .padding()
-        .frame(width: 480, minHeight: 320)
+        .frame(width: 480, height: 320)
     }
 
     private func addCitation() {

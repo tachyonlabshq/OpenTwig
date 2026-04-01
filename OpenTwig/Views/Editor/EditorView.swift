@@ -30,7 +30,6 @@ struct EditorView: View {
     var body: some View {
         VStack(spacing: 0) {
             editorArea
-            Divider()
             statusBar
         }
         .navigationTitle(document?.filename ?? "")
@@ -50,21 +49,23 @@ struct EditorView: View {
     }
 
     private var lineNumberGutter: some View {
-        ScrollView(.vertical, showsIndicators: false) {
+        let text = content.wrappedValue
+        let lineCount = max(text.components(separatedBy: "\n").count, 1)
+
+        return ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .trailing, spacing: 0) {
-                let lineCount = max(content.wrappedValue.components(separatedBy: "\n").count, 1)
                 ForEach(1...lineCount, id: \.self) { lineNumber in
                     Text("\(lineNumber)")
                         .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.quaternary)
                         .frame(height: 20)
                 }
             }
             .padding(.horizontal, 8)
             .padding(.top, 8)
         }
-        .frame(width: 48)
-        .background(Color(.controlBackgroundColor).opacity(0.5))
+        .frame(width: 44)
+        .background(Color(.controlBackgroundColor).opacity(0.4))
     }
 
     private var textEditor: some View {
@@ -77,38 +78,56 @@ struct EditorView: View {
     // MARK: - Status Bar
 
     private var statusBar: some View {
-        HStack(spacing: 16) {
-            if let doc = document {
-                Label("\(doc.wordCount) words", systemImage: "text.word.spacing")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        VStack(spacing: 0) {
+            Divider()
+            HStack(spacing: 0) {
+                if let doc = document {
+                    statusItem(
+                        label: "\(doc.wordCount) words",
+                        icon: "text.word.spacing"
+                    )
+                    statusDivider
+                    statusItem(
+                        label: "\(doc.content.count) chars",
+                        icon: "character.cursor.ibeam"
+                    )
+                    statusDivider
+                    statusItem(
+                        label: "Ln \(cursorPosition.line), Col \(cursorPosition.column)",
+                        icon: "cursorarrow.click"
+                    )
+                }
 
-                Label("\(doc.content.count) characters", systemImage: "character.cursor.ibeam")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Spacer()
 
-                Label("Ln \(cursorPosition.line), Col \(cursorPosition.column)",
-                      systemImage: "cursorarrow.click")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            if let doc = document, doc.isModified {
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(.blue)
-                        .frame(width: 6, height: 6)
-                    Text("Modified")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                if let doc = document, doc.isModified {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.accentColor)
+                            .frame(width: 6, height: 6)
+                        Text("Modified")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
                 }
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 5)
+            .background(Color(.windowBackgroundColor))
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(Color(.controlBackgroundColor))
+    }
+
+    private func statusItem(label: String, icon: String) -> some View {
+        Label(label, systemImage: icon)
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+    }
+
+    private var statusDivider: some View {
+        Text("\u{2022}")
+            .font(.caption2)
+            .foregroundStyle(.quaternary)
+            .padding(.horizontal, 8)
     }
 }
 

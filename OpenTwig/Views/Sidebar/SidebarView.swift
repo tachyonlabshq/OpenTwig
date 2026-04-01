@@ -8,7 +8,13 @@ struct SidebarView: View {
 
         List(selection: $appState.sidebarSelection) {
             projectPickerSection
-            navigationSections
+
+            Section("Workspace") {
+                ForEach(SidebarSelection.allCases, id: \.self) { section in
+                    Label(section.label, systemImage: section.iconName)
+                        .tag(section)
+                }
+            }
         }
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) {
@@ -22,19 +28,21 @@ struct SidebarView: View {
     private var projectPickerSection: some View {
         Section {
             Menu {
-                ForEach(appState.projects) { project in
-                    Button {
-                        appState.openProject(project)
-                    } label: {
-                        Label(
-                            project.name,
-                            systemImage: project.id == appState.selectedProject?.id
-                                ? "checkmark" : "folder"
-                        )
+                if !appState.projects.isEmpty {
+                    ForEach(appState.projects) { project in
+                        Button {
+                            appState.openProject(project)
+                        } label: {
+                            Label(
+                                project.name,
+                                systemImage: project.id == appState.selectedProject?.id
+                                    ? "checkmark.circle.fill" : "folder"
+                            )
+                        }
                     }
-                }
 
-                Divider()
+                    Divider()
+                }
 
                 Button {
                     appState.showNewProject = true
@@ -48,21 +56,26 @@ struct SidebarView: View {
                     Label("Clone Repository...", systemImage: "arrow.down.doc")
                 }
             } label: {
-                HStack {
+                HStack(spacing: 10) {
                     Image(systemName: "folder.fill")
-                        .foregroundStyle(.accent)
+                        .font(.title3)
+                        .foregroundStyle(Color.accentColor)
+
                     VStack(alignment: .leading, spacing: 2) {
                         Text(appState.selectedProject?.name ?? "No Project")
                             .font(.headline)
                             .lineLimit(1)
+
                         if let project = appState.selectedProject {
                             statusLabel(for: project.status)
                         }
                     }
+
                     Spacer()
+
                     Image(systemName: "chevron.up.chevron.down")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                 }
                 .padding(.vertical, 4)
             }
@@ -91,27 +104,15 @@ struct SidebarView: View {
         }
     }
 
-    // MARK: - Navigation Sections
-
-    private var navigationSections: some View {
-        Section("Navigation") {
-            ForEach(SidebarSelection.allCases, id: \.self) { section in
-                NavigationLink(value: section) {
-                    Label(section.label, systemImage: section.iconName)
-                }
-            }
-        }
-    }
-
     // MARK: - Git Status Bar
 
     private var gitStatusBar: some View {
         VStack(spacing: 0) {
             Divider()
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 Image(systemName: "arrow.triangle.branch")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
 
                 Text(appState.selectedProject?.currentBranch ?? "main")
                     .font(.caption)
@@ -120,18 +121,22 @@ struct SidebarView: View {
 
                 Spacer()
 
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(syncStatusColor)
-                        .frame(width: 6, height: 6)
-                    Text(syncStatusLabel)
-                        .font(.caption2)
-                }
-                .foregroundStyle(.secondary)
+                syncStatusBadge
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(Color(.controlBackgroundColor))
+            .background(Color(.windowBackgroundColor))
+        }
+    }
+
+    private var syncStatusBadge: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(syncStatusColor)
+                .frame(width: 6, height: 6)
+            Text(syncStatusLabel)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -141,15 +146,15 @@ struct SidebarView: View {
         case .syncing: return .blue
         case .cloning: return .orange
         case .error: return .red
-        case nil: return .secondary
+        case nil: return .gray
         }
     }
 
     private var syncStatusLabel: String {
         switch appState.selectedProject?.status {
         case .ready: return "Up to date"
-        case .syncing: return "Syncing"
-        case .cloning: return "Cloning"
+        case .syncing: return "Syncing..."
+        case .cloning: return "Cloning..."
         case .error: return "Error"
         case nil: return "No project"
         }

@@ -12,12 +12,13 @@ struct ProjectCreationView: View {
     }
 
     @State private var selectedTab: Tab
-    @State private var projectName: String = ""
+    @State private var projectName = ""
     @State private var localPath: URL?
-    @State private var remoteURL: String = ""
+    @State private var remoteURL = ""
     @State private var authMethod: AuthMethod = .https
-    @State private var isCreating: Bool = false
+    @State private var isCreating = false
     @State private var progress: Double = 0
+    @State private var errorMessage: String?
 
     enum Tab: String, CaseIterable {
         case newProject = "New Project"
@@ -37,6 +38,7 @@ struct ProjectCreationView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Segmented picker header
             Picker("", selection: $selectedTab) {
                 ForEach(Tab.allCases, id: \.self) { tab in
                     Text(tab.rawValue).tag(tab)
@@ -44,9 +46,11 @@ struct ProjectCreationView: View {
             }
             .pickerStyle(.segmented)
             .padding()
+            .disabled(isCreating)
 
             Divider()
 
+            // Form content
             Group {
                 switch selectedTab {
                 case .newProject:
@@ -57,10 +61,32 @@ struct ProjectCreationView: View {
             }
             .frame(maxHeight: .infinity)
 
+            // Error banner
+            if let errorMessage {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.yellow)
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button {
+                        self.errorMessage = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .background(Color.yellow.opacity(0.08))
+            }
+
             Divider()
             footerButtons
         }
-        .frame(width: 520, height: 400)
+        .frame(width: 520, height: 420)
     }
 
     // MARK: - New Project Form
@@ -71,7 +97,7 @@ struct ProjectCreationView: View {
                 TextField("Project Name", text: $projectName)
 
                 HStack {
-                    Text(localPath?.path ?? "No folder selected")
+                    Text(localPath?.path(percentEncoded: false) ?? "No folder selected")
                         .foregroundStyle(localPath == nil ? .secondary : .primary)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -82,7 +108,6 @@ struct ProjectCreationView: View {
                 }
 
                 TextField("Remote URL (optional)", text: $remoteURL)
-                    .textFieldStyle(.roundedBorder)
             }
         }
         .formStyle(.grouped)
@@ -94,7 +119,7 @@ struct ProjectCreationView: View {
         Form {
             Section("Repository") {
                 TextField("Remote URL", text: $remoteURL)
-                    .textFieldStyle(.roundedBorder)
+                    .textContentType(.URL)
 
                 Picker("Authentication", selection: $authMethod) {
                     ForEach(AuthMethod.allCases, id: \.self) { method in
@@ -105,7 +130,7 @@ struct ProjectCreationView: View {
 
             Section("Destination") {
                 HStack {
-                    Text(localPath?.path ?? "No folder selected")
+                    Text(localPath?.path(percentEncoded: false) ?? "No folder selected")
                         .foregroundStyle(localPath == nil ? .secondary : .primary)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -120,6 +145,7 @@ struct ProjectCreationView: View {
                 Section {
                     VStack(spacing: 8) {
                         ProgressView(value: progress)
+                            .tint(Color.accentColor)
                         Text("Cloning repository...")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -159,9 +185,11 @@ struct ProjectCreationView: View {
     private var isFormValid: Bool {
         switch selectedTab {
         case .newProject:
-            return !projectName.trimmingCharacters(in: .whitespaces).isEmpty && localPath != nil
+            return !projectName.trimmingCharacters(in: .whitespaces).isEmpty
+                && localPath != nil
         case .clone:
-            return !remoteURL.trimmingCharacters(in: .whitespaces).isEmpty && localPath != nil
+            return !remoteURL.trimmingCharacters(in: .whitespaces).isEmpty
+                && localPath != nil
         }
     }
 
@@ -179,7 +207,9 @@ struct ProjectCreationView: View {
     }
 
     private func performAction() {
+        errorMessage = nil
         isCreating = true
+
         switch selectedTab {
         case .newProject:
             let project = Project(
@@ -189,6 +219,7 @@ struct ProjectCreationView: View {
             )
             appState.projects.append(project)
             appState.openProject(project)
+            isCreating = false
             dismiss()
 
         case .clone:

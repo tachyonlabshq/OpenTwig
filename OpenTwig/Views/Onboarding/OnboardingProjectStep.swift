@@ -15,27 +15,32 @@ struct OnboardingProjectStep: View {
 
     var onComplete: () -> Void
 
+    private var isValid: Bool {
+        switch mode {
+        case .new:
+            return !projectName.trimmingCharacters(in: .whitespaces).isEmpty && folderPath != nil
+        case .open:
+            return folderPath != nil
+        case .clone:
+            return !remoteURL.trimmingCharacters(in: .whitespaces).isEmpty && folderPath != nil
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
 
+            // Header
             Text("Start a project")
                 .font(.system(.title2, design: .monospaced, weight: .medium))
                 .foregroundStyle(.primary)
 
-            HStack(spacing: 16) {
-                ForEach(ProjectMode.allCases, id: \.self) { m in
-                    Button(action: { mode = m }) {
-                        Text(m.rawValue)
-                            .font(.system(.callout, design: .monospaced))
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(mode == m ? .primary : .tertiary)
-                }
-            }
-            .padding(.top, 20)
+            // Mode selector
+            modeSelector
+                .padding(.top, 24)
 
-            VStack(spacing: 0) {
+            // Contextual fields
+            Group {
                 switch mode {
                 case .new:
                     newProjectFields
@@ -45,14 +50,15 @@ struct OnboardingProjectStep: View {
                     cloneProjectFields
                 }
             }
-            .padding(.top, 24)
+            .padding(.top, 32)
 
+            // Action
             Button(action: finish) {
                 Text("Done")
                     .font(.body)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.accent)
+            .foregroundStyle(isValid ? Color.accentColor : Color.accentColor.opacity(0.35))
             .disabled(!isValid)
             .padding(.top, 40)
 
@@ -60,79 +66,105 @@ struct OnboardingProjectStep: View {
         }
     }
 
-    private var newProjectFields: some View {
-        VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("PROJECT NAME")
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.tertiary)
+    // MARK: - Mode Selector
 
+    private var modeSelector: some View {
+        HStack(spacing: 0) {
+            ForEach(Array(ProjectMode.allCases.enumerated()), id: \.element) { index, m in
+                if index > 0 {
+                    Text("\u{00B7}")
+                        .font(.system(.callout, design: .monospaced))
+                        .foregroundStyle(.quaternary)
+                        .padding(.horizontal, 12)
+                }
+
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        mode = m
+                    }
+                }) {
+                    Text(m.rawValue)
+                        .font(.system(.callout, design: .monospaced))
+                        .fontWeight(mode == m ? .medium : .regular)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(mode == m ? .primary : .tertiary)
+            }
+        }
+    }
+
+    // MARK: - Field Groups
+
+    private var newProjectFields: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            fieldGroup(label: "PROJECT NAME") {
                 TextField("", text: $projectName, prompt: Text("My Paper").foregroundStyle(.quaternary))
                     .textFieldStyle(.plain)
                     .font(.system(.body, design: .monospaced))
             }
 
-            Divider()
-                .padding(.vertical, 16)
-
-            folderPicker
+            locationPicker
         }
     }
 
     private var openProjectFields: some View {
-        folderPicker
+        VStack(alignment: .leading, spacing: 0) {
+            locationPicker
+        }
     }
 
     private var cloneProjectFields: some View {
-        VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("REMOTE URL")
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.tertiary)
-
+        VStack(alignment: .leading, spacing: 24) {
+            fieldGroup(label: "REMOTE URL") {
                 TextField("", text: $remoteURL, prompt: Text("https://github.com/...").foregroundStyle(.quaternary))
                     .textFieldStyle(.plain)
                     .font(.system(.body, design: .monospaced))
             }
 
-            Divider()
-                .padding(.vertical, 16)
-
-            folderPicker
+            locationPicker
         }
     }
 
-    private var folderPicker: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("LOCATION")
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.tertiary)
+    private var locationPicker: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("LOCATION")
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(.tertiary)
+                .tracking(2)
 
+            HStack {
                 Text(folderPath?.lastPathComponent ?? "No folder selected")
                     .font(.system(.body, design: .monospaced))
                     .foregroundStyle(folderPath == nil ? .tertiary : .primary)
+
+                Spacer()
+
+                Button("Choose\u{2026}") {
+                    chooseFolder()
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.accentColor)
+                .font(.callout)
             }
 
-            Spacer()
-
-            Button("Choose...") {
-                chooseFolder()
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(.accent)
-            .font(.callout)
+            Divider()
+                .padding(.top, 4)
         }
     }
 
-    private var isValid: Bool {
-        switch mode {
-        case .new:
-            return !projectName.trimmingCharacters(in: .whitespaces).isEmpty && folderPath != nil
-        case .open:
-            return folderPath != nil
-        case .clone:
-            return !remoteURL.trimmingCharacters(in: .whitespaces).isEmpty && folderPath != nil
+    // MARK: - Helpers
+
+    private func fieldGroup<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(.tertiary)
+                .tracking(2)
+
+            content()
+
+            Divider()
+                .padding(.top, 4)
         }
     }
 
@@ -149,7 +181,9 @@ struct OnboardingProjectStep: View {
     }
 
     private func finish() {
-        let name = mode == .new ? projectName.trimmingCharacters(in: .whitespaces) : (folderPath?.lastPathComponent ?? "Untitled")
+        let name = mode == .new
+            ? projectName.trimmingCharacters(in: .whitespaces)
+            : (folderPath?.lastPathComponent ?? "Untitled")
         let project = Project(
             name: name,
             localPath: folderPath,

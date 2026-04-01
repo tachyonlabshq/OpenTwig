@@ -5,38 +5,55 @@ struct OnboardingConnectStep: View {
     @State private var token: String = ""
     var onContinue: () -> Void
 
+    private var hasToken: Bool {
+        !token.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
 
+            // Header
             Text("GitHub")
                 .font(.system(.title2, design: .monospaced, weight: .medium))
                 .foregroundStyle(.primary)
 
-            Text("Connect your account to push, pull,\nand collaborate.")
+            Text("Connect to push, pull, and collaborate.")
                 .font(.callout)
                 .foregroundStyle(.tertiary)
-                .multilineTextAlignment(.center)
-                .padding(.top, 4)
+                .padding(.top, 6)
 
-            VStack(alignment: .leading, spacing: 4) {
+            // Token field
+            VStack(alignment: .leading, spacing: 6) {
                 Text("PERSONAL ACCESS TOKEN")
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(.tertiary)
+                    .tracking(2)
 
                 SecureField("", text: $token, prompt: Text("ghp_...").foregroundStyle(.quaternary))
                     .textFieldStyle(.plain)
                     .font(.system(.body, design: .monospaced))
+
+                Divider()
+                    .padding(.top, 4)
+
+                Text("Stored in Keychain.")
+                    .font(.caption)
+                    .foregroundStyle(.quaternary)
+                    .padding(.top, 2)
             }
             .padding(.top, 40)
 
-            HStack(spacing: 24) {
+            // Actions
+            HStack {
                 Button(action: onContinue) {
                     Text("Skip")
                         .font(.body)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
+
+                Spacer()
 
                 Button(action: {
                     let trimmed = token.trimmingCharacters(in: .whitespaces)
@@ -50,8 +67,8 @@ struct OnboardingConnectStep: View {
                         .font(.body)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.accent)
-                .disabled(token.trimmingCharacters(in: .whitespaces).isEmpty)
+                .foregroundStyle(hasToken ? Color.accentColor : Color.accentColor.opacity(0.35))
+                .disabled(!hasToken)
             }
             .padding(.top, 40)
 

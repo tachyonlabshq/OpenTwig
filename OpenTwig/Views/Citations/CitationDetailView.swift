@@ -68,7 +68,7 @@ struct CitationDetailView: View {
             HStack {
                 Text("@\(citation.id)")
                     .font(.title3.monospaced())
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
                     .textSelection(.enabled)
 
                 Spacer()

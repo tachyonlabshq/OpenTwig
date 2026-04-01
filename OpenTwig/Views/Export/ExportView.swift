@@ -33,7 +33,7 @@ struct ExportView: View {
         HStack {
             Image(systemName: "square.and.arrow.up")
                 .font(.title2)
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
             VStack(alignment: .leading) {
                 Text("Export Document")
                     .font(.headline)

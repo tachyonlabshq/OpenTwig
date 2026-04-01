@@ -2,8 +2,8 @@ import SwiftUI
 
 struct BranchListView: View {
     @Environment(AppState.self) private var appState
-    @State private var showNewBranch: Bool = false
-    @State private var newBranchName: String = ""
+    @State private var showNewBranch = false
+    @State private var newBranchName = ""
 
     private var localBranches: [GitBranch] {
         appState.branches.filter { !$0.isRemote }
@@ -25,15 +25,19 @@ struct BranchListView: View {
                     BranchRow(branch: branch)
                         .tag(branch.name)
                         .contextMenu {
-                            Button("Switch to Branch") {
+                            Button {
                                 // Placeholder: switch branch via GitService
+                            } label: {
+                                Label("Switch to Branch", systemImage: "arrow.left.arrow.right")
                             }
                             .disabled(branch.isCurrent)
 
                             Divider()
 
-                            Button("Delete Branch", role: .destructive) {
+                            Button(role: .destructive) {
                                 appState.branches.removeAll { $0.name == branch.name }
+                            } label: {
+                                Label("Delete Branch", systemImage: "trash")
                             }
                             .disabled(branch.isCurrent)
                         }
@@ -46,8 +50,10 @@ struct BranchListView: View {
                         BranchRow(branch: branch)
                             .tag(branch.name)
                             .contextMenu {
-                                Button("Checkout as Local Branch") {
+                                Button {
                                     // Placeholder: checkout remote branch
+                                } label: {
+                                    Label("Checkout as Local Branch", systemImage: "arrow.down.to.line")
                                 }
                             }
                     }
@@ -137,12 +143,16 @@ private struct BranchRow: View {
             if branch.isCurrent {
                 Image(systemName: "checkmark")
                     .font(.caption)
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
+            } else {
+                // Reserve space so rows align regardless of checkmark visibility
+                Color.clear
+                    .frame(width: 10, height: 10)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(branch.name)
-                    .font(.body)
+                    .font(.system(.body, design: .monospaced))
                     .fontWeight(branch.isCurrent ? .semibold : .regular)
                     .lineLimit(1)
 

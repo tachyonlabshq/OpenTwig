@@ -195,12 +195,7 @@ final class CitationViewModel {
     // MARK: - BibTeX Parsing (Minimal)
 
     private func parseBibTeX(_ text: String) -> [Citation] {
-        // Matches @type{citekey, ... } blocks.
-        let entryPattern = /@(\w+)\s*\{\s*([^,]+)\s*,([\s\S]*?)\n\s*\}/
-        guard let regex = try? NSRegularExpression(pattern: entryPattern.description, options: []) else {
-            return parseBibTeXManual(text)
-        }
-        _ = regex // NSRegularExpression approach is fragile for BibTeX; use manual parse.
+        // NSRegularExpression approach is fragile for BibTeX; use manual parse.
         return parseBibTeXManual(text)
     }
 

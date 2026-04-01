@@ -6,11 +6,7 @@ let package = Package(
     platforms: [
         .macOS(.v14)
     ],
-    products: [
-        .executable(name: "OpenTwig", targets: ["OpenTwig"])
-    ],
     dependencies: [
-        .package(url: "https://github.com/SwiftGit2/SwiftGit2.git", branch: "main"),
         .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.6.0"),
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-markdown.git", from: "0.3.0"),
@@ -19,7 +15,6 @@ let package = Package(
         .executableTarget(
             name: "OpenTwig",
             dependencies: [
-                .product(name: "SwiftGit2", package: "SwiftGit2"),
                 .product(name: "SwiftSoup", package: "SwiftSoup"),
                 .product(name: "Collections", package: "swift-collections"),
                 .product(name: "Markdown", package: "swift-markdown"),
@@ -29,10 +24,5 @@ let package = Package(
                 .process("Resources")
             ]
         ),
-        .testTarget(
-            name: "OpenTwigTests",
-            dependencies: ["OpenTwig"],
-            path: "OpenTwigTests"
-        )
     ]
 )

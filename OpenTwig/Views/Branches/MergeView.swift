@@ -29,7 +29,7 @@ struct MergeView: View {
             Divider()
             footer
         }
-        .frame(width: 600, minHeight: 480)
+        .frame(width: 600, height: 480)
     }
 
     // MARK: - Header

@@ -34,8 +34,6 @@ struct DocumentListView: View {
     }
 
     var body: some View {
-        @Bindable var appState = appState
-
         List(filteredDocuments, selection: Binding(
             get: { appState.selectedDocument?.id },
             set: { newID in
@@ -45,15 +43,24 @@ struct DocumentListView: View {
             DocumentRow(document: document)
                 .tag(document.id)
                 .contextMenu {
-                    Button("Rename...") {
-                        // Placeholder for rename action
+                    Button {
+                        // Placeholder for rename
+                    } label: {
+                        Label("Rename...", systemImage: "pencil")
                     }
-                    Button("Reveal in Finder") {
+
+                    Button {
                         revealInFinder(document)
+                    } label: {
+                        Label("Reveal in Finder", systemImage: "folder")
                     }
+
                     Divider()
-                    Button("Delete", role: .destructive) {
+
+                    Button(role: .destructive) {
                         appState.deleteDocument(document)
+                    } label: {
+                        Label("Delete", systemImage: "trash")
                     }
                 }
         }
@@ -62,46 +69,64 @@ struct DocumentListView: View {
         .navigationTitle("Documents")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                Menu {
-                    Picker("Sort By", selection: $sortOrder) {
-                        ForEach(SortOrder.allCases, id: \.self) { order in
-                            Text(order.rawValue).tag(order)
-                        }
-                    }
-                } label: {
-                    Label("Sort", systemImage: "arrow.up.arrow.down")
-                }
-                .help("Sort documents")
-
-                Button {
-                    appState.createNewDocument()
-                } label: {
-                    Label("New Document", systemImage: "plus")
-                }
-                .keyboardShortcut("n", modifiers: [.command, .option])
-                .help("Create a new document")
+                sortMenu
+                newDocumentButton
             }
         }
         .overlay {
             if filteredDocuments.isEmpty {
-                ContentUnavailableView {
-                    Label("No Documents", systemImage: "doc.text")
-                } description: {
-                    if searchText.isEmpty {
-                        Text("Create a new document to get started.")
-                    } else {
-                        Text("No documents match your search.")
-                    }
-                } actions: {
-                    if searchText.isEmpty {
-                        Button("New Document") {
-                            appState.createNewDocument()
-                        }
-                    }
+                emptyState
+            }
+        }
+    }
+
+    // MARK: - Toolbar Items
+
+    private var sortMenu: some View {
+        Menu {
+            Picker("Sort By", selection: $sortOrder) {
+                ForEach(SortOrder.allCases, id: \.self) { order in
+                    Text(order.rawValue).tag(order)
+                }
+            }
+        } label: {
+            Label("Sort", systemImage: "arrow.up.arrow.down")
+        }
+        .help("Sort documents")
+    }
+
+    private var newDocumentButton: some View {
+        Button {
+            appState.createNewDocument()
+        } label: {
+            Label("New Document", systemImage: "plus")
+        }
+        .keyboardShortcut("n", modifiers: [.command, .option])
+        .help("Create a new document")
+    }
+
+    // MARK: - Empty State
+
+    @ViewBuilder
+    private var emptyState: some View {
+        ContentUnavailableView {
+            Label("No Documents", systemImage: "doc.text")
+        } description: {
+            if searchText.isEmpty {
+                Text("Create a new document to get started.")
+            } else {
+                Text("No documents match your search.")
+            }
+        } actions: {
+            if searchText.isEmpty {
+                Button("New Document") {
+                    appState.createNewDocument()
                 }
             }
         }
     }
+
+    // MARK: - Helpers
 
     private func revealInFinder(_ document: Document) {
         guard let projectPath = appState.selectedProject?.localPath else { return }
@@ -117,15 +142,10 @@ private struct DocumentRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            if document.isModified {
-                Circle()
-                    .fill(.blue)
-                    .frame(width: 8, height: 8)
-            } else {
-                Circle()
-                    .fill(.clear)
-                    .frame(width: 8, height: 8)
-            }
+            // Modified indicator
+            Circle()
+                .fill(document.isModified ? Color.accentColor : .clear)
+                .frame(width: 7, height: 7)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(document.filename)
@@ -142,10 +162,10 @@ private struct DocumentRow: View {
 
             Text("\(document.wordCount)")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.tertiary)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Color(.controlBackgroundColor), in: Capsule())
+                .background(Color(.separatorColor).opacity(0.3), in: Capsule())
         }
         .padding(.vertical, 2)
     }

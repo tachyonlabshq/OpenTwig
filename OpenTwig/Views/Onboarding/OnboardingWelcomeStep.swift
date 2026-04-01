@@ -21,8 +21,8 @@ struct OnboardingWelcomeStep: View {
                     .font(.body)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.accent)
-            .padding(.top, 40)
+            .foregroundStyle(Color.accentColor)
+            .padding(.top, 48)
 
             Spacer()
         }
