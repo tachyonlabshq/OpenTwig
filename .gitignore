@@ -1,23 +1,21 @@
-# Xcode
-*.xcodeproj/xcuserdata/
-*.xcworkspace/xcuserdata/
-DerivedData/
-build/
-*.pbxuser
-*.mode1v3
-*.mode2v3
-*.perspectivev3
-*.moved-aside
-*.hmap
-*.ipa
-*.dSYM.zip
-*.dSYM
+# Node / Vite
+node_modules/
+dist/
+*.log
+.vite/
 
-# Swift Package Manager
-.build/
-.swiftpm/
-Packages/
-Package.resolved
+# Rust / Tauri
+src-tauri/target/
+src-tauri/gen/
+src-tauri/Cargo.lock
+
+# Swift legacy
+legacy/swift-prototype/.build/
+legacy/swift-prototype/build/
+legacy/swift-prototype/.swiftpm/
+legacy/swift-prototype/Package.resolved
+legacy/swift-prototype/*.xcodeproj/xcuserdata/
+legacy/swift-prototype/DerivedData/
 
 # Environment / secrets
 .env

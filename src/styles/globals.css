@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #fafaf7;
+  --color-bg-elevated: #ffffff;
+  --color-fg: #1a1a1a;
+  --color-fg-secondary: #6b6b6b;
+  --color-fg-tertiary: #9a9a9a;
+  --color-fg-quaternary: #c8c8c8;
+  --color-accent: #0066cc;
+  --color-border: #e5e5e0;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-bg: #1a1a1a;
+    --color-bg-elevated: #232323;
+    --color-fg: #e8e8e8;
+    --color-fg-secondary: #a8a8a8;
+    --color-fg-tertiary: #6b6b6b;
+    --color-fg-quaternary: #4a4a4a;
+    --color-border: #2a2a2a;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* { box-sizing: border-box; }
+
+input, textarea {
+  background: transparent;
+  outline: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+::selection { background: var(--color-accent); color: #fff; }
+
+.slide-enter { opacity: 0; transform: translateX(24px); }
+.slide-enter-active { opacity: 1; transform: translateX(0); transition: all 350ms ease-in-out; }
+.slide-exit { opacity: 1; transform: translateX(0); }
+.slide-exit-active { opacity: 0; transform: translateX(-24px); transition: all 350ms ease-in-out; }
